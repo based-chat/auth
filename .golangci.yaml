@@ -133,17 +133,18 @@ linters:
           # - `lax`: allowed if it doesn't match the deny list or the allow rule is more specific (longer) than the deny rule.
           # Default: "original"
           files:
-           - "!$test"
+            - "!$test"
           allow:
             - $gostd
-            - github.com/mazxcv/fuzzy-funicular
+            - github.com/based-chat/auth
+            - github.com/fatih/color
         test:
           files:
            - "$test"
           allow:
             - github.com/stretchr/testify
             - $gostd
-            - github.com/mazxcv/fuzzy-funicular
+            - github.com/based-chat/auth
     errcheck:
       # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
       # Such cases aren't reported by default.
@@ -230,7 +231,7 @@ linters:
     nolintlint:
       # Exclude following linters from requiring an explanation.
       # Default: []
-      allow-no-explanation: [ funlen, gocognit, golines ]
+      allow-no-explanation: [funlen, gocognit, golines]
       # Enable to require an explanation of nonzero length after each nolint directive.
       # Default: false
       require-explanation: true
@@ -376,7 +377,7 @@ formatters:
       # with the given prefixes are grouped after 3rd-party packages.
       # Default: []
       local-prefixes:
-        - github.com/mazxcv/fuzzy-funicular
+        - github.com/based-chat/auth
     gofmt:
       simplify: true
       rewrite-rules:

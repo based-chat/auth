@@ -1,4 +1,4 @@
-// package main - entrypoint for client rpc
+// package main - entrypoint for auth application
 package main
 
 import (
