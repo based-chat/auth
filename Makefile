@@ -18,7 +18,7 @@ generate: install-deps
 
 generate-user-api: install-deps
 	mkdir -p pkg/user/v1
-	@if ! command -v protoc >/dev/null 2>&1 ; then echo "protoc not found in PATH"; exit 1; fi
+	@if ! command -v $(PROTOC) >/dev/null 2>&1 ; then echo "$(PROTOC) not found in PATH"; exit 1; fi
 	$(PROTOC) \
 	--proto_path api/user/v1 \
 	--go_out=pkg/user/v1 --go_opt=paths=source_relative \
