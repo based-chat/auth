@@ -20,10 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserV1_Create_FullMethodName = "/user_v1.UserV1/Create"
-	UserV1_Get_FullMethodName    = "/user_v1.UserV1/Get"
-	UserV1_Update_FullMethodName = "/user_v1.UserV1/Update"
-	UserV1_Delete_FullMethodName = "/user_v1.UserV1/Delete"
+	UserV1_Create_FullMethodName = "/user.v1.UserV1/Create"
+	UserV1_Get_FullMethodName    = "/user.v1.UserV1/Get"
+	UserV1_Update_FullMethodName = "/user.v1.UserV1/Update"
+	UserV1_Delete_FullMethodName = "/user.v1.UserV1/Delete"
 )
 
 // UserV1Client is the client API for UserV1 service.
@@ -211,7 +211,7 @@ func _UserV1_Delete_Handler(srv interface{}, ctx context.Context, dec func(inter
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var UserV1_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "user_v1.UserV1",
+	ServiceName: "user.v1.UserV1",
 	HandlerType: (*UserV1Server)(nil),
 	Methods: []grpc.MethodDesc{
 		{

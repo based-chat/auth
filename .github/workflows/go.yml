@@ -9,26 +9,50 @@ on:
   pull_request:
     branches: [main, dev]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions: 
+  contents: read
+
 jobs:
 
   build:
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+    name: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-    - name: Set up Go
-      uses: actions/setup-go@v6
-      with:
-        go-version: '1.25.x'
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
 
-    - name: Build
-      run: go build -o ./bin/ -v ./...
+      - name: Generate user API
+        run: make generate-user-api
 
-    - name: Test
-      run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Ensure no diff after generate
+        run: git diff --exit-code
+
+      - name: Build
+        run: |
+          mkdir -p ./bin
+          while read -r pkg name; do
+            bin="./bin/$(basename "$pkg")"
+            echo "building $pkg -> $bin"
+            go build -v -o "$bin" "$pkg"
+          done < <(go list -f '{{.ImportPath}} {{.Name}}' ./cmd/... | awk '$2=="main"{print $1" "$2}')
+
+      - name: Test
+        run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+          if-no-files-found: ignore
 
   golangci:
     name: lint
