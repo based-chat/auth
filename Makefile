@@ -1,28 +1,47 @@
-.PHONY: all clean test install-deps get-deps generate generate-note-api install-golangci-lint lint lint-feature
+.PHONY: all install-deps generate generate-user-api install-golangci-lint lint lint-feature clean test
 all: lint
 
-LOCAL_BIN:=$(CURDIR)/bin
+test: 
+	go test -v -race ./...
+
+clean:
+	rm -rf bin pkg/user/v1/*.go coverage.out
+
+LOCAL_BIN?=$(CURDIR)/bin
+PROTOC ?= protoc
 install-deps:
 	mkdir -p $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.9
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 generate: install-deps
-	make generate-note-api
+	$(MAKE) generate-user-api
 
-generate-note-api:
-	mkdir -p pkg/note_v1
-	protoc --proto_path api/note_v1 \
-	--go_out=pkg/note_v1 --go_opt=paths=source_relative \
+generate-user-api: install-deps
+	mkdir -p pkg/user/v1
+	@if ! command -v $(PROTOC) >/dev/null 2>&1 ; then echo "$(PROTOC) not found in PATH"; exit 1; fi
+	$(PROTOC) \
+	--proto_path api/user/v1 \
+	--go_out=pkg/user/v1 --go_opt=paths=source_relative \
 	--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
-	--go-grpc_out=pkg/note_v1 --go-grpc_opt=paths=source_relative \
+	--go-grpc_out=pkg/user/v1 --go-grpc_opt=paths=source_relative \
 	--plugin=protoc-gen-go-grpc=$(LOCAL_BIN)/protoc-gen-go-grpc \
-	api/note_v1/note.proto
+	api/user/v1/user.proto
 
 install-golangci-lint:
+	mkdir -p $(LOCAL_BIN)
 	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0
 
-lint:
+lint: install-golangci-lint
 	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.yaml
 
-lint-feature:
+lint-feature: install-golangci-lint
 	$(LOCAL_BIN)/golangci-lint run --config .golangci.yaml --new-from-rev dev
+
+.PHONY: install-go-test-coverage
+install-go-test-coverage:
+	GOBIN=$(LOCAL_BIN) go install github.com/vladopajic/go-test-coverage/v2@latest
+
+.PHONY: check-coverage
+check-coverage: install-go-test-coverage
+	go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+	$(LOCAL_BIN)/go-test-coverage --config=./.testcoverage.yml
