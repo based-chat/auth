@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 )
 
+// main function is the entrypoint for auth application.
 func main() {
 	log.Println(color.GreenString("Hello, World!"))
 }
