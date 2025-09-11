@@ -9,7 +9,6 @@ package user_v1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	reflect "reflect"
@@ -414,12 +413,56 @@ func (x *DeleteRequest) GetId() int64 {
 	return 0
 }
 
+type DeleteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Deleted       bool                   `protobuf:"varint,1,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteResponse) Reset() {
+	*x = DeleteResponse{}
+	mi := &file_user_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteResponse) ProtoMessage() {}
+
+func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
+func (*DeleteResponse) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeleteResponse) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
 var File_user_proto protoreflect.FileDescriptor
 
 const file_user_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"user.proto\x12\auser.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"|\n" +
+	"user.proto\x12\auser.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"|\n" +
 	"\rCreateRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
@@ -444,15 +487,17 @@ const file_user_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\x04name\x122\n" +
 	"\x05email\x18\x03 \x01(\v2\x1c.google.protobuf.StringValueR\x05email\"\x1f\n" +
 	"\rDeleteRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id*\x1f\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"*\n" +
+	"\x0eDeleteResponse\x12\x18\n" +
+	"\adeleted\x18\x01 \x01(\bR\adeleted*\x1f\n" +
 	"\bUserRole\x12\t\n" +
 	"\x05ADMIN\x10\x00\x12\b\n" +
-	"\x04USER\x10\x012\xe9\x01\n" +
+	"\x04USER\x10\x012\xe8\x01\n" +
 	"\x06UserV1\x129\n" +
 	"\x06Create\x12\x16.user.v1.CreateRequest\x1a\x17.user.v1.CreateResponse\x120\n" +
-	"\x03Get\x12\x13.user.v1.GetRequest\x1a\x14.user.v1.GetResponse\x128\n" +
-	"\x06Update\x12\x16.user.v1.UpdateRequest\x1a\x16.google.protobuf.Empty\x128\n" +
-	"\x06Delete\x12\x16.user.v1.DeleteRequest\x1a\x16.google.protobuf.EmptyB0Z.github.com/based-chat/auth/pkg/user/v1;user_v1b\x06proto3"
+	"\x03Get\x12\x13.user.v1.GetRequest\x1a\x14.user.v1.GetResponse\x126\n" +
+	"\x06Update\x12\x16.user.v1.UpdateRequest\x1a\x14.user.v1.GetResponse\x129\n" +
+	"\x06Delete\x12\x16.user.v1.DeleteRequest\x1a\x17.user.v1.DeleteResponseB0Z.github.com/based-chat/auth/pkg/user/v1;user_v1b\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
@@ -467,7 +512,7 @@ func file_user_proto_rawDescGZIP() []byte {
 }
 
 var file_user_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_user_proto_goTypes = []any{
 	(UserRole)(0),                  // 0: user.v1.UserRole
 	(*CreateRequest)(nil),          // 1: user.v1.CreateRequest
@@ -476,25 +521,25 @@ var file_user_proto_goTypes = []any{
 	(*GetResponse)(nil),            // 4: user.v1.GetResponse
 	(*UpdateRequest)(nil),          // 5: user.v1.UpdateRequest
 	(*DeleteRequest)(nil),          // 6: user.v1.DeleteRequest
-	(*timestamppb.Timestamp)(nil),  // 7: google.protobuf.Timestamp
-	(*wrapperspb.StringValue)(nil), // 8: google.protobuf.StringValue
-	(*emptypb.Empty)(nil),          // 9: google.protobuf.Empty
+	(*DeleteResponse)(nil),         // 7: user.v1.DeleteResponse
+	(*timestamppb.Timestamp)(nil),  // 8: google.protobuf.Timestamp
+	(*wrapperspb.StringValue)(nil), // 9: google.protobuf.StringValue
 }
 var file_user_proto_depIdxs = []int32{
 	0,  // 0: user.v1.CreateRequest.role:type_name -> user.v1.UserRole
 	0,  // 1: user.v1.GetResponse.role:type_name -> user.v1.UserRole
-	7,  // 2: user.v1.GetResponse.created_at:type_name -> google.protobuf.Timestamp
-	7,  // 3: user.v1.GetResponse.updated_at:type_name -> google.protobuf.Timestamp
-	8,  // 4: user.v1.UpdateRequest.name:type_name -> google.protobuf.StringValue
-	8,  // 5: user.v1.UpdateRequest.email:type_name -> google.protobuf.StringValue
+	8,  // 2: user.v1.GetResponse.created_at:type_name -> google.protobuf.Timestamp
+	8,  // 3: user.v1.GetResponse.updated_at:type_name -> google.protobuf.Timestamp
+	9,  // 4: user.v1.UpdateRequest.name:type_name -> google.protobuf.StringValue
+	9,  // 5: user.v1.UpdateRequest.email:type_name -> google.protobuf.StringValue
 	1,  // 6: user.v1.UserV1.Create:input_type -> user.v1.CreateRequest
 	3,  // 7: user.v1.UserV1.Get:input_type -> user.v1.GetRequest
 	5,  // 8: user.v1.UserV1.Update:input_type -> user.v1.UpdateRequest
 	6,  // 9: user.v1.UserV1.Delete:input_type -> user.v1.DeleteRequest
 	2,  // 10: user.v1.UserV1.Create:output_type -> user.v1.CreateResponse
 	4,  // 11: user.v1.UserV1.Get:output_type -> user.v1.GetResponse
-	9,  // 12: user.v1.UserV1.Update:output_type -> google.protobuf.Empty
-	9,  // 13: user.v1.UserV1.Delete:output_type -> google.protobuf.Empty
+	4,  // 12: user.v1.UserV1.Update:output_type -> user.v1.GetResponse
+	7,  // 13: user.v1.UserV1.Delete:output_type -> user.v1.DeleteResponse
 	10, // [10:14] is the sub-list for method output_type
 	6,  // [6:10] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
@@ -513,7 +558,7 @@ func file_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_proto_rawDesc), len(file_user_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

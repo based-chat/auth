@@ -20,7 +20,7 @@ generate-user-api: install-deps
 	mkdir -p pkg/user/v1
 	@if ! command -v $(PROTOC) >/dev/null 2>&1 ; then echo "$(PROTOC) not found in PATH"; exit 1; fi
 	$(PROTOC) \
-	-I api -I . \
+	--proto_path api/user/v1 \
 	--go_out=pkg/user/v1 --go_opt=paths=source_relative \
 	--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
 	--go-grpc_out=pkg/user/v1 --go-grpc_opt=paths=source_relative \
