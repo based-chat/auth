@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
 
-option go_package = "github.com/based-chat/auth/pkg/user/v1;user_v1";
+option go_package = "github.com/based-chat/auth/api/pkg/user/v1;user_v1";
 
 service UserV1 {
     rpc Create(CreateRequest) returns (CreateResponse);
@@ -54,6 +54,7 @@ message DeleteResponse {
 }
 
 enum UserRole {
-    ADMIN = 0;
-    USER = 1;
+    USER_ROLE_UNSPECIFIED = 0;
+    ADMIN = 1;
+    USER = 2;
 }
