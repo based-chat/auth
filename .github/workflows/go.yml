@@ -29,6 +29,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+
       - name: Generate user API
         run: make generate-user-api
 
@@ -43,6 +46,7 @@ jobs:
             echo "building $pkg -> $bin"
             go build -v -o "$bin" "$pkg"
           done < <(go list -f '{{.ImportPath}} {{.Name}}' ./cmd/... | awk '$2=="main"{print $1" "$2}')
+
 
       - name: Test
         run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...

@@ -20,7 +20,7 @@ generate-user-api: install-deps
 	mkdir -p pkg/user/v1
 	@if ! command -v $(PROTOC) >/dev/null 2>&1 ; then echo "$(PROTOC) not found in PATH"; exit 1; fi
 	$(PROTOC) \
-	--proto_path api/user/v1 \
+	-I api -I . \
 	--go_out=pkg/user/v1 --go_opt=paths=source_relative \
 	--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go \
 	--go-grpc_out=pkg/user/v1 --go-grpc_opt=paths=source_relative \
@@ -36,3 +36,12 @@ lint: install-golangci-lint
 
 lint-feature: install-golangci-lint
 	$(LOCAL_BIN)/golangci-lint run --config .golangci.yaml --new-from-rev dev
+
+.PHONY: install-go-test-coverage
+install-go-test-coverage:
+	GOBIN=$(LOCAL_BIN) go install github.com/vladopajic/go-test-coverage/v2@latest
+
+.PHONY: check-coverage
+check-coverage: install-go-test-coverage
+	go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+	$(LOCAL_BIN)/go-test-coverage --config=./.testcoverage.yml
