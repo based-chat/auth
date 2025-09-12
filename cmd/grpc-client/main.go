@@ -16,10 +16,16 @@ import (
 )
 
 const (
-	grpcPort           = ":50052"
-	grpcHost           = "localhost"
-	maxTimeout         = 1 * time.Second
-	cntSymbolsPassword = 8
+	grpcPort                      = "50052"
+	grpcHost                      = "localhost"
+	maxTimeout                    = 1 * time.Second
+	cntSymbolsPassword            = 8
+	ERROR_FAILED_CONNECT          = "failed to connect: %v"
+	ERROR_FAILED_CLOSE_CONNECTION = "failed to close connection: %v"
+	ERROR_FAILED_GET_USER         = "failed to get user: %v"
+	ERROR_FAILED_CREATE_USER      = "failed to create user: %v"
+	ERROR_FAILED_UPDATE_USER      = "failed to update user: %v"
+	ERROR_FAILED_DELETE_USER      = "failed to delete user: %v"
 )
 
 // main provides an example of how to use the grpc client to interact with the
@@ -33,12 +39,12 @@ func main() {
 	addr := net.JoinHostPort(grpcHost, grpcPort)
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("failed to connect: %v", err)
+		log.Fatalf(ERROR_FAILED_CONNECT, err)
 	}
 	defer func() {
 		connErr := conn.Close()
 		if connErr != nil {
-			log.Default().Println("failed to close connection: " + connErr.Error())
+			log.Default().Printf(ERROR_FAILED_CLOSE_CONNECTION, connErr)
 		}
 	}()
 
@@ -55,7 +61,7 @@ func main() {
 		Role:     srv.UserRole_USER,
 	})
 	if err != nil {
-		log.Default().Println("failed to get: ", err)
+		log.Default().Printf(ERROR_FAILED_GET_USER, err)
 		return
 	}
 
@@ -64,7 +70,7 @@ func main() {
 		Id: createResponse.GetId(),
 	})
 	if err != nil {
-		log.Default().Println("failed to create: ", err)
+		log.Default().Printf(ERROR_FAILED_CREATE_USER, err)
 	}
 
 	// Update a user
@@ -74,7 +80,7 @@ func main() {
 		Email: &wrapperspb.StringValue{Value: gofakeit.Email()},
 	})
 	if err != nil {
-		log.Default().Println("failed to update: ", err)
+		log.Default().Printf(ERROR_FAILED_UPDATE_USER, err)
 	}
 
 	// Delete a user
@@ -82,6 +88,6 @@ func main() {
 		Id: createResponse.GetId(),
 	})
 	if err != nil {
-		log.Default().Println("failed to delete: ", err)
+		log.Default().Printf(ERROR_FAILED_DELETE_USER, err)
 	}
 }

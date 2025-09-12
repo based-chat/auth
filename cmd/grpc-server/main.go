@@ -18,8 +18,14 @@ import (
 )
 
 const (
-	grpcPort = ":50052"
-	grpcHost = "localhost"
+	grpcPort                = ":50052"
+	grpcHost                = "localhost"
+	ERROR_NAME_REQUIRED     = "name is required"
+	ERROR_EMAIL_REQUIRED    = "email is required"
+	ERROR_PASSWORD_REQUIRED = "password is required"
+	ERROR_INVALID_ID        = "invalid ID: %d"
+	ERROR_FAILED_LISTEN     = "failed to listen: %v"
+	ERROR_FAILED_SERVE      = "failed to serve: %v"
 )
 
 type server struct {
@@ -28,7 +34,16 @@ type server struct {
 
 // Create creates a user with a randomly generated name and email.
 // It returns the user's id in the response.
-func (s *server) Create(_ context.Context, _ *srv.CreateRequest) (*srv.CreateResponse, error) {
+func (s *server) Create(_ context.Context, req *srv.CreateRequest) (*srv.CreateResponse, error) {
+	if req.GetName() == "" {
+		return nil, fmt.Errorf(ERROR_NAME_REQUIRED)
+	}
+	if req.GetEmail() == "" {
+		return nil, fmt.Errorf(ERROR_EMAIL_REQUIRED)
+	}
+	if req.GetPassword() == "" {
+		return nil, fmt.Errorf(ERROR_PASSWORD_REQUIRED)
+	}
 	return &srv.CreateResponse{
 		Id: mathx.Abs(gofakeit.Int64()),
 	}, nil
@@ -39,16 +54,17 @@ func (s *server) Create(_ context.Context, _ *srv.CreateRequest) (*srv.CreateRes
 // The user's details are randomly generated.
 func (s *server) Get(_ context.Context, req *srv.GetRequest) (*srv.GetResponse, error) {
 	if req.GetId() <= 0 {
-		return nil, fmt.Errorf("invalid user ID: %d", req.GetId())
+		return nil, fmt.Errorf(ERROR_INVALID_ID, req.GetId())
 	}
 	// Return a random user
+	date := gofakeit.Date()
 	return &srv.GetResponse{
-		Id:        req.GetId(), // Возвращаем тот же ID, что был запрошен
+		Id:        req.GetId(),
 		Name:      gofakeit.Name(),
 		Email:     gofakeit.Email(),
 		Role:      srv.UserRole_USER,
-		CreatedAt: timestamppb.New(gofakeit.Date()),
-		UpdatedAt: timestamppb.New(gofakeit.Date()),
+		CreatedAt: timestamppb.New(date),
+		UpdatedAt: timestamppb.New(date),
 	}, nil
 }
 
@@ -58,7 +74,7 @@ func (s *server) Get(_ context.Context, req *srv.GetRequest) (*srv.GetResponse, 
 // If the request ID is invalid (less than or equal to 0), it returns an error.
 func (s *server) Update(_ context.Context, req *srv.UpdateRequest) (*srv.GetResponse, error) {
 	if req.GetId() <= 0 {
-		return nil, fmt.Errorf("invalid user ID: %d", req.GetId())
+		return nil, fmt.Errorf(ERROR_INVALID_ID, req.GetId())
 	}
 
 	// set random name or request name
@@ -79,8 +95,8 @@ func (s *server) Update(_ context.Context, req *srv.UpdateRequest) (*srv.GetResp
 		Name:      name,
 		Email:     email,
 		Role:      srv.UserRole_USER,
-		CreatedAt: timestamppb.New(gofakeit.Date()),
-		UpdatedAt: timestamppb.New(time.Now()), // Используем текущее время для updated_at
+		CreatedAt: timestamppb.Now(),
+		UpdatedAt: timestamppb.Now(),
 	}, nil
 }
 
@@ -89,7 +105,7 @@ func (s *server) Update(_ context.Context, req *srv.UpdateRequest) (*srv.GetResp
 // It returns a DeleteResponse with the "deleted" field set to true if the user was deleted.
 func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteResponse, error) {
 	if req.GetId() <= 0 {
-		return nil, fmt.Errorf("invalid user ID: %d", req.GetId())
+		return nil, fmt.Errorf(ERROR_INVALID_ID, req.GetId())
 	}
 	// Return fact that user was deleted
 	return &srv.DeleteResponse{
@@ -102,27 +118,20 @@ func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteR
 // It then serves the grpc server and logs any errors that occur during serving.
 func main() {
 	// Listen on the specified address
-	webAddress := net.JoinHostPort(grpcPort, grpcHost)
-	addr, err := net.ResolveTCPAddr("tcp", webAddress)
+	listen, err := net.Listen("tcp", net.JoinHostPort(grpcHost, grpcPort))
 	if err != nil {
-		log.Fatalf("failed to resolve address: %v", err)
-	}
-	listen, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf(ERROR_FAILED_LISTEN, err)
 	}
 
 	// Seed the random number generator
-	if err = gofakeit.Seed(time.Now().UnixNano()); err != nil {
-		log.Default().Printf("failed to seed random number generator: %v", err)
-	}
+	gofakeit.Seed(time.Now().UnixNano()) //nolint
 
 	// Start the grpc server
 	s := grpc.NewServer()
 	reflection.Register(s)
 	srv.RegisterUserV1Server(s, &server{})
-	err = s.Serve(listen)
-	if err != nil {
-		log.Default().Println("failed to serve:", err.Error())
+	if err = s.Serve(listen); err != nil {
+		log.Fatalf(ERROR_FAILED_SERVE, err)
+		return
 	}
 }

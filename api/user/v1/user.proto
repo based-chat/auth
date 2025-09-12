@@ -54,7 +54,7 @@ message DeleteResponse {
 }
 
 enum UserRole {
-    USER_ROLE_UNSPECIFIED = 0;
+    UNSPECIFIED = 0;
     ADMIN = 1;
-    USER = 2;
+    USER  = 2;
 }

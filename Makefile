@@ -13,7 +13,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -f coverage.out
 	rm -f pkg/user/v1/*.pb.go pkg/user/v1/*_grpc.pb.go
-	@if [ -d pkg/user/v1 ] && [ ! "$(ls -A pkg/user/v1)" ]; then rmdir pkg/user/v1; fi
+	@if [ -d pkg/user/v1 ] && [ ! "$$(ls -A pkg/user/v1 2>/dev/null)" ]; then rmdir pkg/user/v1 2>/dev/null || true; fi
 
 install-deps:
 	mkdir -p $(LOCAL_BIN)
@@ -24,7 +24,11 @@ generate: install-deps
 
 generate-user-api: install-deps
 	mkdir -p pkg/user/v1
-	@if ! command -v $(PROTOC) >/dev/null 2>&1 ; then echo "$(PROTOC) not found in PATH"; exit 1; fi
+	@if ! command -v $(PROTOC) >/dev/null 2>&1 ; then \
+		echo "Error: $(PROTOC) not found in PATH"; \
+		echo "Please install protoc: https://grpc.io/docs/protoc-installation/"; \
+		exit 1; \
+	fi
 	$(PROTOC) \
 	--proto_path api/user/v1 \
 	--go_out=pkg/user/v1 --go_opt=paths=source_relative \
