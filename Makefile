@@ -12,8 +12,7 @@ clean:
 	rm -rf $(LOCAL_BIN)
 	rm -rf $(BUILD_DIR)
 	rm -f coverage.out
-	rm -f pkg/user/v1/*.pb.go pkg/user/v1/*_grpc.pb.go
-	@if [ -d pkg/user/v1 ] && [ ! "$$(ls -A pkg/user/v1 2>/dev/null)" ]; then rmdir pkg/user/v1 2>/dev/null || true; fi
+	@rmdir pkg/user/v1 2>/dev/null || true
 
 install-deps:
 	mkdir -p $(LOCAL_BIN)

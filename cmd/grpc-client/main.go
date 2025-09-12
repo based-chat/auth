@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net"
 	"time"
@@ -16,16 +17,19 @@ import (
 )
 
 const (
-	grpcPort                      = "50052"
-	grpcHost                      = "localhost"
-	maxTimeout                    = 1 * time.Second
-	cntSymbolsPassword            = 8
-	ERROR_FAILED_CONNECT          = "failed to connect: %v"
-	ERROR_FAILED_CLOSE_CONNECTION = "failed to close connection: %v"
-	ERROR_FAILED_GET_USER         = "failed to get user: %v"
-	ERROR_FAILED_CREATE_USER      = "failed to create user: %v"
-	ERROR_FAILED_UPDATE_USER      = "failed to update user: %v"
-	ERROR_FAILED_DELETE_USER      = "failed to delete user: %v"
+	grpcPort           = "50052"
+	grpcHost           = "localhost"
+	maxTimeout         = 1 * time.Second
+	cntSymbolsPassword = 8
+)
+
+var (
+	errFailedConnect         = errors.New("failed to connect: %v")
+	errFailedCloseConnection = "failed to close connection: %v"
+	errFailedGetUser         = "failed to get user: %v"
+	errFailedCreateUser      = "failed to create user: %v"
+	errFailedUpdateUser      = "failed to update user: %v"
+	errFailedDeleteUser      = "failed to delete user: %v"
 )
 
 // main provides an example of how to use the grpc client to interact with the
@@ -37,19 +41,23 @@ const (
 func main() {
 	// Connect to the grpc server
 	addr := net.JoinHostPort(grpcHost, grpcPort)
+
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf(ERROR_FAILED_CONNECT, err)
+		log.Default().Printf(errFailedConnect.Error(), err)
+		return
 	}
+
 	defer func() {
 		connErr := conn.Close()
 		if connErr != nil {
-			log.Default().Printf(ERROR_FAILED_CLOSE_CONNECTION, connErr)
+			log.Default().Printf(errFailedCloseConnection, connErr)
 		}
 	}()
 
 	// make a grpc client
 	c := srv.NewUserV1Client(conn)
+
 	ctx, cancel := context.WithTimeout(context.Background(), maxTimeout)
 	defer cancel()
 
@@ -61,7 +69,7 @@ func main() {
 		Role:     srv.UserRole_USER,
 	})
 	if err != nil {
-		log.Default().Printf(ERROR_FAILED_GET_USER, err)
+		log.Default().Printf(errFailedCreateUser, err)
 		return
 	}
 
@@ -70,7 +78,7 @@ func main() {
 		Id: createResponse.GetId(),
 	})
 	if err != nil {
-		log.Default().Printf(ERROR_FAILED_CREATE_USER, err)
+		log.Default().Printf(errFailedGetUser, err)
 	}
 
 	// Update a user
@@ -80,7 +88,7 @@ func main() {
 		Email: &wrapperspb.StringValue{Value: gofakeit.Email()},
 	})
 	if err != nil {
-		log.Default().Printf(ERROR_FAILED_UPDATE_USER, err)
+		log.Default().Printf(errFailedUpdateUser, err)
 	}
 
 	// Delete a user
@@ -88,6 +96,6 @@ func main() {
 		Id: createResponse.GetId(),
 	})
 	if err != nil {
-		log.Default().Printf(ERROR_FAILED_DELETE_USER, err)
+		log.Default().Printf(errFailedDeleteUser, err)
 	}
 }

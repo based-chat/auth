@@ -61,9 +61,11 @@ linters:
     - usestdlibvars
     - usetesting
     - wastedassign
-    - whitespace
-    - wsl
+    - wsl_v5
 
+  settings:
+     misspell:
+       locale: US
   exclusions:
     generated: lax
     presets:
@@ -94,3 +96,5 @@ formatters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  new: true
+  new-from-merge-base: main
