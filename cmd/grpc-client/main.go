@@ -1,5 +1,5 @@
 // Package grpcclient provides grpc client.
-package grpcclient
+package main
 
 import (
 	"context"
@@ -16,10 +16,10 @@ import (
 )
 
 const (
-	gprcPort            = ":50052"
-	grmcHost            = "localhost"
-	maxTimeout          = 1 * time.Second
-	cntSymbolsPasssword = 8
+	grpcPort           = ":50052"
+	grpcHost           = "localhost"
+	maxTimeout         = 1 * time.Second
+	cntSymbolsPassword = 8
 )
 
 // main provides an example of how to use the grpc client to interact with the
@@ -29,7 +29,9 @@ const (
 // randomly generated name, email, and password. It then gets the user by their
 // id, updates the user's name and email, and finally deletes the user.
 func main() {
-	conn, err := grpc.NewClient(net.JoinHostPort(grmcHost, gprcPort), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// Connect to the grpc server
+	addr := net.JoinHostPort(grpcHost, grpcPort)
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect: %v", err)
 	}
@@ -40,20 +42,24 @@ func main() {
 		}
 	}()
 
+	// make a grpc client
 	c := srv.NewUserV1Client(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), maxTimeout)
 	defer cancel()
 
+	// Create a user
 	createResponse, err := c.Create(ctx, &srv.CreateRequest{
 		Name:     gofakeit.Name(),
 		Email:    gofakeit.Email(),
-		Password: gofakeit.Password(true, true, true, true, false, cntSymbolsPasssword),
+		Password: gofakeit.Password(true, true, true, true, false, cntSymbolsPassword),
 		Role:     srv.UserRole_USER,
 	})
 	if err != nil {
-		log.Default().Println("failed to create: ", err)
+		log.Default().Println("failed to get: ", err)
+		return
 	}
 
+	// Get a user
 	_, err = c.Get(ctx, &srv.GetRequest{
 		Id: createResponse.GetId(),
 	})
@@ -61,16 +67,17 @@ func main() {
 		log.Default().Println("failed to create: ", err)
 	}
 
+	// Update a user
 	_, err = c.Update(ctx, &srv.UpdateRequest{
 		Id:    createResponse.GetId(),
 		Name:  &wrapperspb.StringValue{Value: gofakeit.Name()},
 		Email: &wrapperspb.StringValue{Value: gofakeit.Email()},
 	})
 	if err != nil {
-		log.Default().Print("failed to update: ", err)
-		log.Default().Println()
+		log.Default().Println("failed to update: ", err)
 	}
 
+	// Delete a user
 	_, err = c.Delete(ctx, &srv.DeleteRequest{
 		Id: createResponse.GetId(),
 	})

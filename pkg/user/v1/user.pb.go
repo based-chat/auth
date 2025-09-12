@@ -501,7 +501,7 @@ const file_user_proto_rawDesc = "" +
 	"\x06Create\x12\x16.user.v1.CreateRequest\x1a\x17.user.v1.CreateResponse\x120\n" +
 	"\x03Get\x12\x13.user.v1.GetRequest\x1a\x14.user.v1.GetResponse\x126\n" +
 	"\x06Update\x12\x16.user.v1.UpdateRequest\x1a\x14.user.v1.GetResponse\x129\n" +
-	"\x06Delete\x12\x16.user.v1.DeleteRequest\x1a\x17.user.v1.DeleteResponseB4Z2github.com/based-chat/auth/api/pkg/user/v1;user_v1b\x06proto3"
+	"\x06Delete\x12\x16.user.v1.DeleteRequest\x1a\x17.user.v1.DeleteResponseB0Z.github.com/based-chat/auth/pkg/user/v1;user_v1b\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
