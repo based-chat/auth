@@ -16,7 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	srv "github.com/based-chat/auth/pkg/user/v1"
-	"github.com/based-chat/auth/utilites/mathx"
+	"github.com/based-chat/auth/utilities/mathx"
 )
 
 const (
@@ -132,12 +132,12 @@ func main() {
 
 	listen, err := lc.Listen(context.Background(), "tcp", net.JoinHostPort(grpcHost, grpcPort))
 	if err != nil {
-		log.Fatalf(errFailedListen.Error(), err)
+		log.Fatalf("%s: %v", errFailedListen.Error(), err)
 	}
 
 	// Seed the random number generator
 	if err := gofakeit.Seed(time.Now().UnixNano()); err != nil {
-		log.Fatalf(errFailedSeed.Error(), err)
+		log.Fatalf("%s: %v", errFailedSeed.Error(), err)
 	}
 
 	// Start the grpc server
@@ -146,6 +146,6 @@ func main() {
 	srv.RegisterUserV1Server(s, &server{})
 
 	if err = s.Serve(listen); err != nil {
-		log.Fatalf(errFailedServe.Error(), err)
+		log.Fatalf("%s: %v", errFailedServe.Error(), err)
 	}
 }

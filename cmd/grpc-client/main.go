@@ -39,7 +39,6 @@ var (
 // randomly generated name, email, and password. It then gets the user by their
 // id, updates the user's name and email, and finally deletes the user.
 func main() {
-	// Connect to the grpc server
 	addr := net.JoinHostPort(grpcHost, grpcPort)
 
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -55,14 +54,11 @@ func main() {
 		}
 	}()
 
-	// make a grpc client
 	c := srv.NewUserV1Client(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), maxTimeout)
-	defer cancel()
+	ctxCreateUser, cancelCreateUser := context.WithTimeout(context.Background(), maxTimeout)
 
-	// Create a user
-	createResponse, err := c.Create(ctx, &srv.CreateRequest{
+	createResponse, err := c.Create(ctxCreateUser, &srv.CreateRequest{
 		Name:     gofakeit.Name(),
 		Email:    gofakeit.Email(),
 		Password: gofakeit.Password(true, true, true, true, false, cntSymbolsPassword),
@@ -73,16 +69,22 @@ func main() {
 		return
 	}
 
-	// Get a user
-	_, err = c.Get(ctx, &srv.GetRequest{
+	cancelCreateUser()
+
+	ctxGetUser, cancelGetUser := context.WithTimeout(context.Background(), maxTimeout)
+
+	_, err = c.Get(ctxGetUser, &srv.GetRequest{
 		Id: createResponse.GetId(),
 	})
 	if err != nil {
 		log.Default().Printf(errFailedGetUser, err)
 	}
 
-	// Update a user
-	_, err = c.Update(ctx, &srv.UpdateRequest{
+	cancelGetUser()
+
+	ctxUpdateUser, cancelUpdateUser := context.WithTimeout(context.Background(), maxTimeout)
+
+	_, err = c.Update(ctxUpdateUser, &srv.UpdateRequest{
 		Id:    createResponse.GetId(),
 		Name:  &wrapperspb.StringValue{Value: gofakeit.Name()},
 		Email: &wrapperspb.StringValue{Value: gofakeit.Email()},
@@ -91,11 +93,16 @@ func main() {
 		log.Default().Printf(errFailedUpdateUser, err)
 	}
 
-	// Delete a user
-	_, err = c.Delete(ctx, &srv.DeleteRequest{
+	cancelUpdateUser()
+
+	ctxDeleteUser, cancelDeleteUser := context.WithTimeout(context.Background(), maxTimeout)
+
+	_, err = c.Delete(ctxDeleteUser, &srv.DeleteRequest{
 		Id: createResponse.GetId(),
 	})
 	if err != nil {
 		log.Default().Printf(errFailedDeleteUser, err)
 	}
+
+	cancelDeleteUser()
 }

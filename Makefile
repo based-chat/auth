@@ -60,13 +60,13 @@ check-coverage: install-go-test-coverage
 	$(LOCAL_BIN)/go-test-coverage --config=./.testcoverage.yml
 
 
-build: build-server build-client
+build: generate build-server build-client
 
-build-server: generate
+build-server: 
 	mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/server cmd/grpc-server/main.go
 
-build-client: generate
+build-client:
 	mkdir -p $(BUILD_DIR)
 	go build -o $(BUILD_DIR)/client cmd/grpc-client/main.go
 
