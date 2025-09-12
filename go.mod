@@ -9,6 +9,8 @@ require (
 )
 
 require (
+	github.com/brianvoe/gofakeit v3.18.0+incompatible
+	github.com/brianvoe/gofakeit/v7 v7.6.0
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/net v0.41.0 // indirect
