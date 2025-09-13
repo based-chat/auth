@@ -1,6 +1,6 @@
 //go:build tools
 
-// Package tools фиксирует версии генераторов кода через blank-imports.
+// Package tools pins code generator versions via blank imports.
 package tools
 
 import (

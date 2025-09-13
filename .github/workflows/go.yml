@@ -5,7 +5,7 @@ name: Go
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,10 +30,10 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
         with:
-            version: "21.12"
+          version: "21.12"
 
-      - name: Generate user API
-        run: make generate-user-api
+      - name: Generate rpc API-entities
+        run: make generate
 
       - name: Ensure no diff after generate
         run: git diff --exit-code
@@ -46,7 +46,6 @@ jobs:
             echo "building $pkg -> $bin"
             go build -v -o "$bin" "$pkg"
           done < <(go list -f '{{.ImportPath}} {{.Name}}' ./cmd/... | awk '$2=="main"{print $1" "$2}')
-
 
       - name: Test
         run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...

@@ -26,22 +26,22 @@ const (
 type UserRole int32
 
 const (
-	UserRole_USER_ROLE_UNSPECIFIED UserRole = 0
-	UserRole_ADMIN                 UserRole = 1
-	UserRole_USER                  UserRole = 2
+	UserRole_UNSPECIFIED UserRole = 0
+	UserRole_ADMIN       UserRole = 1
+	UserRole_USER        UserRole = 2
 )
 
 // Enum value maps for UserRole.
 var (
 	UserRole_name = map[int32]string{
-		0: "USER_ROLE_UNSPECIFIED",
+		0: "UNSPECIFIED",
 		1: "ADMIN",
 		2: "USER",
 	}
 	UserRole_value = map[string]int32{
-		"USER_ROLE_UNSPECIFIED": 0,
-		"ADMIN":                 1,
-		"USER":                  2,
+		"UNSPECIFIED": 0,
+		"ADMIN":       1,
+		"USER":        2,
 	}
 )
 
@@ -137,7 +137,7 @@ func (x *CreateRequest) GetRole() UserRole {
 	if x != nil {
 		return x.Role
 	}
-	return UserRole_USER_ROLE_UNSPECIFIED
+	return UserRole_UNSPECIFIED
 }
 
 type CreateResponse struct {
@@ -295,7 +295,7 @@ func (x *GetResponse) GetRole() UserRole {
 	if x != nil {
 		return x.Role
 	}
-	return UserRole_USER_ROLE_UNSPECIFIED
+	return UserRole_UNSPECIFIED
 }
 
 func (x *GetResponse) GetCreatedAt() *timestamppb.Timestamp {
@@ -492,16 +492,16 @@ const file_user_proto_rawDesc = "" +
 	"\rDeleteRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"*\n" +
 	"\x0eDeleteResponse\x12\x18\n" +
-	"\adeleted\x18\x01 \x01(\bR\adeleted*:\n" +
-	"\bUserRole\x12\x19\n" +
-	"\x15USER_ROLE_UNSPECIFIED\x10\x00\x12\t\n" +
+	"\adeleted\x18\x01 \x01(\bR\adeleted*0\n" +
+	"\bUserRole\x12\x0f\n" +
+	"\vUNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05ADMIN\x10\x01\x12\b\n" +
 	"\x04USER\x10\x022\xe8\x01\n" +
 	"\x06UserV1\x129\n" +
 	"\x06Create\x12\x16.user.v1.CreateRequest\x1a\x17.user.v1.CreateResponse\x120\n" +
 	"\x03Get\x12\x13.user.v1.GetRequest\x1a\x14.user.v1.GetResponse\x126\n" +
 	"\x06Update\x12\x16.user.v1.UpdateRequest\x1a\x14.user.v1.GetResponse\x129\n" +
-	"\x06Delete\x12\x16.user.v1.DeleteRequest\x1a\x17.user.v1.DeleteResponseB4Z2github.com/based-chat/auth/api/pkg/user/v1;user_v1b\x06proto3"
+	"\x06Delete\x12\x16.user.v1.DeleteRequest\x1a\x17.user.v1.DeleteResponseB0Z.github.com/based-chat/auth/pkg/user/v1;user_v1b\x06proto3"
 
 var (
 	file_user_proto_rawDescOnce sync.Once
