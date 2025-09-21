@@ -4,11 +4,16 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log"
 	"net"
 	"time"
 
+	"github.com/based-chat/auth/internal/config"
+	"github.com/based-chat/auth/internal/config/env"
+	"github.com/based-chat/auth/internal/mathx"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
@@ -16,8 +21,18 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	srv "github.com/based-chat/auth/pkg/user/v1"
-	"github.com/based-chat/auth/utilities/mathx"
 )
+
+var confgPath string
+
+func init() {
+	err := gofakeit.Seed(time.Now().UnixNano())
+	if err != nil {
+		log.Default().Println(errFailedSeed, err)
+	}
+
+	flag.StringVar(&confgPath, "config-path", ".env", "config path")
+}
 
 const (
 	grpcPort              = "50052"
@@ -29,9 +44,12 @@ const (
 )
 
 var (
-	errFailedListen = errors.New("failed to listen")
-	errFailedServe  = errors.New("failed to serve")
-	errFailedSeed   = errors.New("failed to seed fakeit")
+	errFailedListen          = errors.New("failed to listen")
+	errFailedServe           = errors.New("failed to serve")
+	errFailedSeed            = errors.New("failed to seed fakeit")
+	errFailedLoadConfig      = errors.New("failed to load config")
+	errFailedConnect         = errors.New("failed to connect")
+	errFailedCloseConnection = errors.New("failed to close connection")
 )
 
 type server struct {
@@ -127,18 +145,45 @@ func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteR
 // It seeds the random number generator and registers the user service.
 // It then serves the grpc server and logs any errors that occur during serving.
 func main() {
+	flag.Parse()
+	log.Printf("Starting gRPC server on %s:%s\n", grpcHost, grpcPort)
+
+	ctx := context.Background()
+
+	// Initialize the config
+	if err := config.Load(".env"); err != nil {
+		log.Fatalf("%s: %v", errFailedLoadConfig.Error(), err)
+	}
+
+	gRPCConfig, err := env.NewGRPCConfig()
+	if err != nil {
+		log.Fatalf("%s: %v", errFailedLoadConfig.Error(), err)
+	}
+
 	// Listen on the specified address
 	var lc net.ListenConfig
 
-	listen, err := lc.Listen(context.Background(), "tcp", net.JoinHostPort(grpcHost, grpcPort))
+	listen, err := lc.Listen(context.Background(), "tcp", gRPCConfig.Address())
 	if err != nil {
 		log.Fatalf("%s: %v", errFailedListen.Error(), err)
 	}
 
-	// Seed the random number generator
-	if err := gofakeit.Seed(time.Now().UnixNano()); err != nil {
-		log.Fatalf("%s: %v", errFailedSeed.Error(), err)
+	postgresConfig, err := env.NewPostgresConfig()
+	if err != nil {
+		log.Fatalf("%s: %v", errFailedLoadConfig.Error(), err)
 	}
+
+	conn, err := pgx.Connect(ctx, postgresConfig.DSN())
+	if err != nil {
+		log.Fatalf("%s: %v", errFailedConnect.Error(), err)
+	}
+
+	defer func() {
+		err := conn.Close(ctx)
+		if err != nil {
+			log.Printf("%s: %v", errFailedCloseConnection.Error(), err)
+		}
+	}()
 
 	// Start the grpc server
 	s := grpc.NewServer()
@@ -146,6 +191,6 @@ func main() {
 	srv.RegisterUserV1Server(s, &server{})
 
 	if err = s.Serve(listen); err != nil {
-		log.Fatalf("%s: %v", errFailedServe.Error(), err)
+		log.Printf("%s: %v", errFailedServe.Error(), err)
 	}
 }
