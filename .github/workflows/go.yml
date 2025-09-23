@@ -27,6 +27,10 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: creaate environment file
+        run: |
+          cp .env.example .env
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
         with:
