@@ -29,6 +29,7 @@ jobs:
 
       - name: creaate environment file
         run: |
+          test -f .env.example
           cp .env.example .env
 
       - name: Install Protoc

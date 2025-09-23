@@ -14,11 +14,12 @@ type GrpcConfig struct {
 	port string
 }
 
-// Address implements GRPCCOnfig.
+// Address возвращает адрес gRPC-сервера в формате host:port.
 func (g *GrpcConfig) Address() string {
 	return net.JoinHostPort(g.host, g.port)
 }
 
+// Возвращает указатель на GrpcConfig и ошибку (в текущей реализации всегда nil).
 func NewGRPCConfig() (*GrpcConfig, error) {
 	host := os.Getenv("GRPC_HOST")
 	if host == "" {

@@ -79,8 +79,8 @@ run-client: build-client
 	$(BUILD_DIR)/client
 
 # Define database connection string and migration directory
-LOCAL_MIGRATION_DSN = $(MIGRATION_DSN)
-LOCAL_MIGRATION_DIR = $(MIGRATION_DIR)
+LOCAL_MIGRATION_DSN ?= $(MIGRATION_DSN)
+LOCAL_MIGRATION_DIR ?= $(MIGRATION_DIR)
 
 # Install Goose (run once)
 install-goose:
