@@ -4,11 +4,16 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log"
 	"net"
 	"time"
 
+	"github.com/based-chat/auth/internal/config"
+	"github.com/based-chat/auth/internal/config/env"
+	"github.com/based-chat/auth/internal/mathx"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
@@ -16,12 +21,23 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	srv "github.com/based-chat/auth/pkg/user/v1"
-	"github.com/based-chat/auth/utilities/mathx"
 )
 
+var configPath string
+
+// init инициализирует генератор случайных данных gofakeit
+// регистрирует флаг командной строки `--config-path` (по умолчанию ".env").
+// При ошибке сидирования она записывается в стандартный лог.
+func init() {
+	err := gofakeit.Seed(time.Now().UnixNano())
+	if err != nil {
+		log.Default().Println(errFailedSeed, err)
+	}
+
+	flag.StringVar(&configPath, "config-path", ".env", "config path")
+}
+
 const (
-	grpcPort              = "50052"
-	grpcHost              = "localhost"
 	errorIDInvalid        = "invalid ID"
 	errorNameRequired     = "name is required"
 	errorEmailRequired    = "email is required"
@@ -29,17 +45,19 @@ const (
 )
 
 var (
-	errFailedListen = errors.New("failed to listen")
-	errFailedServe  = errors.New("failed to serve")
-	errFailedSeed   = errors.New("failed to seed fakeit")
+	errFailedListen          = errors.New("failed to listen")
+	errFailedServe           = errors.New("failed to serve")
+	errFailedSeed            = errors.New("failed to seed fakeit")
+	errFailedLoadConfig      = errors.New("failed to load config")
+	errFailedConnect         = errors.New("failed to connect")
+	errFailedCloseConnection = errors.New("failed to close connection")
 )
 
 type server struct {
 	srv.UnimplementedUserV1Server
 }
 
-// Create creates a user with a randomly generated name and email.
-// It returns the user's id in the response.
+// Create создает нового пользователя. В текущей реализаци его id генерируется случайным образом.
 func (s *server) Create(_ context.Context, req *srv.CreateRequest) (*srv.CreateResponse, error) {
 	if req.GetName() == "" {
 		return nil, status.Error(codes.InvalidArgument, errorNameRequired)
@@ -58,9 +76,7 @@ func (s *server) Create(_ context.Context, req *srv.CreateRequest) (*srv.CreateR
 	}, nil
 }
 
-// Get retrieves a user by their id.
-// It returns the user's id, name, email, role, created_at, and updated_at in the response.
-// The user's details are randomly generated.
+// Get возвращает случайного пользователя.
 func (s *server) Get(_ context.Context, req *srv.GetRequest) (*srv.GetResponse, error) {
 	if req.GetId() <= 0 {
 		return nil, status.Error(codes.InvalidArgument, errorIDInvalid)
@@ -78,10 +94,8 @@ func (s *server) Get(_ context.Context, req *srv.GetRequest) (*srv.GetResponse, 
 	}, nil
 }
 
-// Update updates a user with a randomly generated name and email.
-// It returns the user's id, name, email, role, created_at, and updated_at in the response.
-// The user's details are randomly generated.
-// If the request ID is invalid (less than or equal to 0), it returns an error.
+// Update обновляет пользователя.
+// В текущей реализации он возвращает случайно созданного пользователя.
 func (s *server) Update(_ context.Context, req *srv.UpdateRequest) (*srv.GetResponse, error) {
 	if req.GetId() <= 0 {
 		return nil, status.Error(codes.InvalidArgument, errorIDInvalid)
@@ -110,9 +124,8 @@ func (s *server) Update(_ context.Context, req *srv.UpdateRequest) (*srv.GetResp
 	}, nil
 }
 
-// Delete deletes a user by their ID.
-// It returns an error if the user ID is invalid (less than or equal to 0).
-// It returns a DeleteResponse with the "deleted" field set to true if the user was deleted.
+// Delete удаляет пользователя.
+// В текущей реализации он возвращает успешное удаление.
 func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteResponse, error) {
 	if req.GetId() <= 0 {
 		return nil, status.Error(codes.InvalidArgument, errorIDInvalid)
@@ -123,22 +136,56 @@ func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteR
 	}, nil
 }
 
-// main starts the grpc server and listens on the specified address.
-// It seeds the random number generator and registers the user service.
-// It then serves the grpc server and logs any errors that occur during serving.
+// main запускает gRPC-сервер для сервиса UserV1.
+//
+// Функция:
+// - загружает конфигурацию из файла окружения (config.Load(".env")) и формирует gRPC и Postgres конфиги;
+// - открывает TCP-листенер по адресу gRPC-конфига (gRPCConfig.Address());
+// - устанавливает подключение к PostgreSQL через pgx и откладывает его закрытие;
+// - создаёт gRPC-сервер, регистрирует reflection и реализацию UserV1, после чего начинает
+// обслуживать входящие соединения.
+// В случае ошибок загрузки конфигурации, создания листенера или установления подключения к БД функция
+// завершает процесс с логированием через log.Fatalf.
+// Ошибки во время работы s.Serve() логируются без явного завершения процесса.
 func main() {
+	flag.Parse()
+
+	ctx := context.Background()
+
+	// Initialize the config
+	if err := config.Load(".env"); err != nil {
+		log.Fatalf("%s: %v", errFailedLoadConfig.Error(), err)
+	}
+
+	gRPCConfig, err := env.NewGRPCConfig()
+	if err != nil {
+		log.Fatalf("%s: %v", errFailedLoadConfig.Error(), err)
+	}
+
 	// Listen on the specified address
 	var lc net.ListenConfig
 
-	listen, err := lc.Listen(context.Background(), "tcp", net.JoinHostPort(grpcHost, grpcPort))
+	listen, err := lc.Listen(context.Background(), "tcp", gRPCConfig.Address())
 	if err != nil {
 		log.Fatalf("%s: %v", errFailedListen.Error(), err)
 	}
 
-	// Seed the random number generator
-	if err := gofakeit.Seed(time.Now().UnixNano()); err != nil {
-		log.Fatalf("%s: %v", errFailedSeed.Error(), err)
+	postgresConfig, err := env.NewPostgresConfig()
+	if err != nil {
+		log.Fatalf("%s: %v", errFailedLoadConfig.Error(), err)
 	}
+
+	conn, err := pgx.Connect(ctx, postgresConfig.DSN())
+	if err != nil {
+		log.Fatalf("%s: %v", errFailedConnect.Error(), err)
+	}
+
+	defer func() {
+		err := conn.Close(ctx)
+		if err != nil {
+			log.Printf("%s: %v", errFailedCloseConnection.Error(), err)
+		}
+	}()
 
 	// Start the grpc server
 	s := grpc.NewServer()
@@ -146,6 +193,6 @@ func main() {
 	srv.RegisterUserV1Server(s, &server{})
 
 	if err = s.Serve(listen); err != nil {
-		log.Fatalf("%s: %v", errFailedServe.Error(), err)
+		log.Printf("%s: %v", errFailedServe.Error(), err)
 	}
 }

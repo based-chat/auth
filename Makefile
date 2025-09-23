@@ -1,5 +1,7 @@
-.PHONY: all install-deps generate generate-user-api install-golangci-lint lint lint-feature clean test
-all: clean generate build lint check-coverage  
+.PHONY: all install-deps generate generate-user-api install-golangci-lint lint lint-feature clean test build build-server build-client run-server run-client migrate-up migrate-down migrate-redo migrate-status db-version lint-fix check-coverage
+all: clean generate install-deps build lint check-coverage  
+
+-include .env
 
 LOCAL_BIN?=$(CURDIR)/.bin
 PROTOC ?= protoc
@@ -41,7 +43,7 @@ install-golangci-lint:
 	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0
 
 lint: install-golangci-lint
-	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.yaml
+	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.yaml --color=always
 
 lint-fix: install-golangci-lint
 	$(LOCAL_BIN)/golangci-lint run --fix ./... --config .golangci.yaml
@@ -75,3 +77,37 @@ run-server: build-server
 
 run-client: build-client
 	$(BUILD_DIR)/client
+
+# Define database connection string and migration directory
+LOCAL_MIGRATION_DSN ?= $(MIGRATION_DSN)
+LOCAL_MIGRATION_DIR ?= $(MIGRATION_DIR)
+
+# Install Goose (run once)
+install-goose:
+	mkdir -p $(LOCAL_BIN)
+	mkdir -p $(LOCAL_MIGRATION_DIR)
+	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@latest
+
+new-migration: install-goose
+ifndef NAME
+	$(error Usage: make new-migration NAME=your_migration_name)
+endif
+	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) create $(NAME) sql -v
+
+migrate-up: install-goose
+	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) up -v
+
+# Roll back the last migration
+migrate-down: install-goose
+	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) down
+
+# Roll back the most recently applied migration, then run it again
+migrate-redo: install-goose
+	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) redo
+
+
+migrate-status: install-goose
+	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) status -v
+
+db-version: install-goose
+	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) dbversion -v
