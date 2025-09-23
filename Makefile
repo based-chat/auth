@@ -43,7 +43,7 @@ install-golangci-lint:
 	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0
 
 lint: install-golangci-lint
-	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.yaml
+	$(LOCAL_BIN)/golangci-lint run ./... --config .golangci.yaml --color=always
 
 lint-fix: install-golangci-lint
 	$(LOCAL_BIN)/golangci-lint run --fix ./... --config .golangci.yaml
