@@ -1,6 +1,7 @@
 package env
 
 import (
+	"errors"
 	"log"
 	"os"
 
@@ -11,6 +12,10 @@ var _ config.PostgresConfig = (*PostgresConfig)(nil)
 
 const (
 	envPostgresDSN = "POSTGRES_DSN"
+)
+
+var (
+	errPostgresDSNNotSet = errors.New("postgres dsn is not set")
 )
 
 type PostgresConfig struct {
@@ -29,7 +34,8 @@ func (p *PostgresConfig) DSN() string {
 func NewPostgresConfig() (*PostgresConfig, error) {
 	dsn := os.Getenv(envPostgresDSN)
 	if dsn == "" {
-		log.Default().Println("POSTGRES_DSN is not set")
+		log.Default().Println("postgres dsn is not set")
+		return nil, errPostgresDSNNotSet
 	}
 
 	return &PostgresConfig{

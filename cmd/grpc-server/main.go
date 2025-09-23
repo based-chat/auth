@@ -38,8 +38,6 @@ func init() {
 }
 
 const (
-	grpcPort              = "50052"
-	grpcHost              = "localhost"
 	errorIDInvalid        = "invalid ID"
 	errorNameRequired     = "name is required"
 	errorEmailRequired    = "email is required"
@@ -151,7 +149,6 @@ func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteR
 // Ошибки во время работы s.Serve() логируются без явного завершения процесса.
 func main() {
 	flag.Parse()
-	log.Printf("Starting gRPC server on %s:%s\n", grpcHost, grpcPort)
 
 	ctx := context.Background()
 

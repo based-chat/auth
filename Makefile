@@ -1,7 +1,7 @@
 .PHONY: all install-deps generate generate-user-api install-golangci-lint lint lint-feature clean test build build-server build-client run-server run-client migrate-up migrate-down migrate-redo migrate-status db-version lint-fix check-coverage
 all: clean generate install-deps build lint check-coverage  
 
-include .env
+-include .env
 
 LOCAL_BIN?=$(CURDIR)/.bin
 PROTOC ?= protoc
