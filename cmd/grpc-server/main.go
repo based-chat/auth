@@ -25,6 +25,9 @@ import (
 
 var confgPath string
 
+// init инициализирует генератор случайных данных gofakeit и регистрирует флаг
+// командной строки `--config-path` (по умолчанию ".env"). При ошибке сидирования
+// она записывается в стандартный лог.
 func init() {
 	err := gofakeit.Seed(time.Now().UnixNano())
 	if err != nil {
@@ -143,7 +146,15 @@ func (s *server) Delete(_ context.Context, req *srv.DeleteRequest) (*srv.DeleteR
 
 // main starts the grpc server and listens on the specified address.
 // It seeds the random number generator and registers the user service.
-// It then serves the grpc server and logs any errors that occur during serving.
+// main запускает gRPC-сервер для сервиса UserV1.
+//
+// Функция:
+// - загружает конфигурацию из файла окружения (config.Load(".env")) и формирует gRPC и Postgres конфиги;
+// - открывает TCP-листенер по адресу gRPC-конфига (gRPCConfig.Address());
+// - устанавливает подключение к PostgreSQL через pgx и откладывает его закрытие;
+// - создаёт gRPC-сервер, регистрирует reflection и реализацию UserV1, после чего начинает обслуживать входящие соединения.
+// В случае ошибок загрузки конфигурации, создания листенера или установления подключения к БД функция завершает процесс с логированием через log.Fatalf.
+// Ошибки во время работы s.Serve() логируются без явного завершения процесса.
 func main() {
 	flag.Parse()
 	log.Printf("Starting gRPC server on %s:%s\n", grpcHost, grpcPort)

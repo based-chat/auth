@@ -20,6 +20,10 @@ func (p *PostgresConfig) DSN() string {
 	return p.dsn
 }
 
+// NewPostgresConfig создаёт и возвращает конфигурацию PostgreSQL.
+// DSN читается из переменной окружения POSTGRES_DSN; если переменная не задана или пустая,
+// используется значение по умолчанию "postgres://postgres:postgres@localhost:5432/auth?sslmode=disable".
+// Возвращает указатель на PostgresConfig и ошибку (в текущей реализации всегда nil).
 func NewPostgresConfig() (*PostgresConfig, error) {
 	dsn := os.Getenv(envPostgresDSN)
 	if dsn == "" {
